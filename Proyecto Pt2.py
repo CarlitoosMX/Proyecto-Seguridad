@@ -47,7 +47,8 @@ class CryptoAppReceiver:
             messagebox.showinfo("Mensaje recibido", "El mensaje ha sido recibido.")
             return "Archivo recibido", 200
 
-        app.run(port=5000)
+        # Cambia la IP y el puerto para que Flask escuche en 192.168.100.18:80
+        app.run(host='192.168.100.18', port=80)
 
     def receive_and_decrypt(self):
         try:
