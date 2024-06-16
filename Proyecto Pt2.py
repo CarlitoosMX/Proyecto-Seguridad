@@ -5,6 +5,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA384, SHA512, BLAKE2b
 import hashlib
 import os
+import socket
 
 class CryptoAppReceiver:
     def __init__(self, root):
@@ -47,8 +48,15 @@ class CryptoAppReceiver:
             messagebox.showinfo("Mensaje recibido", "El mensaje ha sido recibido.")
             return "Archivo recibido", 200
 
-        # Cambia la IP y el puerto para que Flask escuche en 192.168.100.18:80
-        app.run(host='192.168.100.18', port=80)
+        # Obtener la IP local del equipo
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+
+        # Imprimir la IP para verificar
+        print(f"Servidor corriendo en IP: {local_ip}")
+
+        # Cambia la IP y el puerto para que Flask escuche en la IP capturada y puerto 80
+        app.run(host=local_ip, port=80)
 
     def receive_and_decrypt(self):
         try:
