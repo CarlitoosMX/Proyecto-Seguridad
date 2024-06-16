@@ -5,13 +5,14 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA384, SHA512, BLAKE2b
 import hashlib
 import os
+from flask import Flask, request
 import socket
 
 class CryptoAppReceiver:
     def __init__(self, root):
         self.root = root
         self.root.title("Crypto App - Recepción")
-        self.root.geometry("800x600")  # Establecer tamaño de la ventana a 800x600
+        self.root.geometry("800x600")
 
         self.public_key = RSA.generate(2048).publickey().export_key()
         self.private_key = RSA.generate(2048)
@@ -31,9 +32,6 @@ class CryptoAppReceiver:
         self.receive_button.pack()
     
     def setup_server(self):
-        # Simulación de servidor para recibir la llave pública y el archivo
-        from flask import Flask, request, send_file
-
         app = Flask(__name__)
 
         @app.route('/get_public_key', methods=['GET'])
@@ -44,24 +42,21 @@ class CryptoAppReceiver:
         def upload():
             file = request.files['file']
             file.save("received_message.png")
-            self.expected_blake2_hash = BLAKE2b.new(data=file.read()).hexdigest()
+
+            self.expected_sha384_hash = request.form['sha384_hash']
+            self.expected_sha512_hash = request.form['sha512_hash']
+            self.expected_blake2_hash = request.form['blake2_hash']
+            
             messagebox.showinfo("Mensaje recibido", "El mensaje ha sido recibido.")
             return "Archivo recibido", 200
 
-        # Obtener la IP local del equipo de manera más confiable
         local_ip = self.get_local_ip()
-
-        # Imprimir la IP para verificar
         print(f"Servidor corriendo en IP: {local_ip}")
-
-        # Cambia la IP y el puerto para que Flask escuche en la IP capturada y puerto 80
         app.run(host=local_ip, port=80)
 
     def get_local_ip(self):
-        # Obtener la IP local de la interfaz de red activa
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            # Conectar a una IP externa (Google DNS) para obtener la IP local
             s.connect(("8.8.8.8", 80))
             ip = s.getsockname()[0]
         except Exception:
@@ -75,29 +70,24 @@ class CryptoAppReceiver:
             with open("received_message.png", "rb") as file:
                 received_encrypted_message = file.read()
 
-            # Paso 9: Validar el HASH Blake2
             blake2_hash = BLAKE2b.new(data=received_encrypted_message).hexdigest()
             if blake2_hash != self.expected_blake2_hash:
                 messagebox.showerror("Error", "Comunicación alterada")
                 os.remove("received_message.png")
                 return
 
-            # Paso 10: Extraer el mensaje y eliminar el estego objeto
             decrypted_message = self.decrypt_message(received_encrypted_message)
             os.remove("received_message.png")
             if not decrypted_message:
                 return
 
-            # Paso 11: Validar el HASH sha512
             sha512_hash = hashlib.sha512(received_encrypted_message).hexdigest()
             if sha512_hash != self.expected_sha512_hash:
                 messagebox.showerror("Error", "SHA512 hash incorrecto")
                 return
 
-            # Paso 12: Usar la llave privada para extraer el mensaje
             decrypted_message = self.decrypt_message(received_encrypted_message)
 
-            # Paso 13: Validar el hash sha384
             sha384_hash = hashlib.sha384(decrypted_message).hexdigest()
             if sha384_hash == self.expected_sha384_hash:
                 messagebox.showinfo("Éxito", "El mensaje es correcto")

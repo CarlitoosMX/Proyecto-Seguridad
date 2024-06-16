@@ -12,7 +12,7 @@ class CryptoAppSender:
     def __init__(self, root):
         self.root = root
         self.root.title("Crypto App - Envío")
-        self.root.geometry("800x600")  # Establecer tamaño de la ventana a 800x600
+        self.root.geometry("800x600")
 
         self.public_key = None
         self.private_key = RSA.generate(2048)
@@ -53,8 +53,8 @@ class CryptoAppSender:
         try:
             # Mostrar mensaje de estado
             messagebox.showinfo("Estado", f"Intentando conectar a {ip}")
-            response = requests.get(f"http://{ip}/get_public_key", timeout=10)  # Añadir timeout para evitar esperas prolongadas
-            response.raise_for_status()  # Agregar esta línea para lanzar una excepción en caso de error de HTTP
+            response = requests.get(f"http://{ip}/get_public_key", timeout=10)
+            response.raise_for_status()
             self.public_key = RSA.import_key(response.content)
             messagebox.showinfo("Llave pública recibida", "La llave pública ha sido recibida con éxito.")
         except requests.RequestException as e:
@@ -101,15 +101,20 @@ class CryptoAppSender:
         steg_file = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
         if steg_file:
             with open(steg_file, "wb") as f:
-                f.write(encrypted_message)  # Simple ejemplo de esteganografía, reemplazar con implementación real
+                f.write(encrypted_message)
             blake2_hash = BLAKE2b.new(data=encrypted_message).hexdigest()
             messagebox.showinfo("BLAKE2 Hash", f"BLAKE2: {blake2_hash}")
 
-            # Paso 8: Enviar el mensaje a otro equipo
+            # Paso 8: Enviar el mensaje a otro equipo junto con los hashes
             ip = simpledialog.askstring("Input", "Ingrese la IP del otro equipo para enviar el mensaje:")
             try:
                 files = {'file': open(steg_file, 'rb')}
-                response = requests.post(f"http://{ip}/upload", files=files)
+                data = {
+                    'sha384_hash': sha384_hash,
+                    'sha512_hash': sha512_hash,
+                    'blake2_hash': blake2_hash
+                }
+                response = requests.post(f"http://{ip}/upload", files=files, data=data)
                 if response.status_code == 200:
                     messagebox.showinfo("Éxito", "Mensaje enviado con éxito.")
                 else:
