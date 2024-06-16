@@ -48,15 +48,27 @@ class CryptoAppReceiver:
             messagebox.showinfo("Mensaje recibido", "El mensaje ha sido recibido.")
             return "Archivo recibido", 200
 
-        # Obtener la IP local del equipo
-        hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
+        # Obtener la IP local del equipo de manera más confiable
+        local_ip = self.get_local_ip()
 
         # Imprimir la IP para verificar
         print(f"Servidor corriendo en IP: {local_ip}")
 
         # Cambia la IP y el puerto para que Flask escuche en la IP capturada y puerto 80
         app.run(host=local_ip, port=80)
+
+    def get_local_ip(self):
+        # Obtener la IP local de la interfaz de red activa
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # Conectar a una IP externa (Google DNS) para obtener la IP local
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+        except Exception:
+            ip = "127.0.0.1"
+        finally:
+            s.close()
+        return ip
 
     def receive_and_decrypt(self):
         try:
