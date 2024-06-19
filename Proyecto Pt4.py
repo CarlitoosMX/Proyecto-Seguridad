@@ -8,6 +8,7 @@ import os
 from flask import Flask, request
 import socket
 import base64
+import threading
 
 class CryptoAppReceiver:
     def __init__(self, root):
@@ -26,7 +27,7 @@ class CryptoAppReceiver:
         self.tag = None
 
         self.create_widgets()
-        self.setup_server()
+        threading.Thread(target=self.setup_server).start()
     
     def create_widgets(self):
         self.label = tk.Label(self.root, text="Crypto App - Recepción")
@@ -60,7 +61,7 @@ class CryptoAppReceiver:
             print(f"SHA512 Hash recibido: {self.expected_sha512_hash}")
             print(f"BLAKE2 Hash recibido: {self.expected_blake2_hash}")
 
-            messagebox.showinfo("Mensaje recibido", "El mensaje ha sido recibido.")
+            print("El mensaje ha sido recibido.")
             return "Archivo recibido", 200
 
         local_ip = self.get_local_ip()
