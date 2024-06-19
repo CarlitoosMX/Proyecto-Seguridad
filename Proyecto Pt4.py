@@ -104,6 +104,8 @@ class CryptoAppReceiver:
             sha384_hash = hashlib.sha384(decrypted_message).hexdigest()
             if sha384_hash == self.expected_sha384_hash:
                 messagebox.showinfo("Éxito", "El mensaje es correcto")
+                with open("descencriptado.txt", "wb") as f:
+                    f.write(decrypted_message)
             else:
                 messagebox.showerror("Error", "SHA384 hash incorrecto")
 
