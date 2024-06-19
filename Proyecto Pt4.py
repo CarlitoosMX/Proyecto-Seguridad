@@ -45,7 +45,9 @@ class CryptoAppReceiver:
         @app.route('/upload', methods=['POST'])
         def upload():
             file = request.files['file']
-            file.save("received_message.png")
+            save_path = "received_files/received_message.png"
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            file.save(save_path)
 
             self.expected_sha384_hash = request.form['sha384_hash']
             self.expected_sha512_hash = request.form['sha512_hash']
@@ -53,13 +55,17 @@ class CryptoAppReceiver:
             self.encrypted_aes_key = base64.b64decode(request.form['encrypted_aes_key'])
             self.nonce = base64.b64decode(request.form['nonce'])
             self.tag = base64.b64decode(request.form['tag'])
-            
+
+            print(f"SHA384 Hash recibido: {self.expected_sha384_hash}")
+            print(f"SHA512 Hash recibido: {self.expected_sha512_hash}")
+            print(f"BLAKE2 Hash recibido: {self.expected_blake2_hash}")
+
             messagebox.showinfo("Mensaje recibido", "El mensaje ha sido recibido.")
             return "Archivo recibido", 200
 
         local_ip = self.get_local_ip()
         print(f"Servidor corriendo en IP: {local_ip}")
-        app.run(host=local_ip, port=80)
+        app.run(host=local_ip, port=5000)
 
     def get_local_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -74,13 +80,13 @@ class CryptoAppReceiver:
 
     def receive_and_decrypt(self):
         try:
-            with open("received_message.png", "rb") as file:
+            with open("received_files/received_message.png", "rb") as file:
                 received_encrypted_message = file.read()
 
             blake2_hash = BLAKE2b.new(data=received_encrypted_message).hexdigest()
             if blake2_hash != self.expected_blake2_hash:
                 messagebox.showerror("Error", "Comunicación alterada")
-                os.remove("received_message.png")
+                os.remove("received_files/received_message.png")
                 return
 
             cipher_rsa = PKCS1_OAEP.new(self.private_key)

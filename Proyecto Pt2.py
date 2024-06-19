@@ -54,7 +54,7 @@ class CryptoAppReceiver:
         print(f"Servidor corriendo en IP: {local_ip}")
         app.run(host=local_ip, port=80)
 
-    def get_local_ip(self):
+    def get_local_ip(self): 
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.connect(("8.8.8.8", 80))

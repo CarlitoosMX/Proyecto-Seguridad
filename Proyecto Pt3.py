@@ -78,7 +78,7 @@ class CryptoAppSender:
         try:
             # Mostrar mensaje de estado
             messagebox.showinfo("Estado", f"Intentando conectar a {ip}")
-            response = requests.get(f"http://{ip}/get_public_key", timeout=10)
+            response = requests.get(f"http://{ip}:5000/get_public_key", timeout=10)
             response.raise_for_status()
             self.public_key = RSA.import_key(response.content)
             messagebox.showinfo("Llave pública recibida", "La llave pública ha sido recibida con éxito.")
@@ -183,7 +183,7 @@ class CryptoAppSender:
                 'nonce': base64.b64encode(self.cipher_aes.nonce).decode('utf-8'),
                 'tag': base64.b64encode(self.tag).decode('utf-8')
             }
-            response = requests.post(f"http://{ip}/upload", files=files, data=data)
+            response = requests.post(f"http://{ip}:5000/upload", files=files, data=data)
             if response.status_code == 200:
                 messagebox.showinfo("Éxito", "Mensaje enviado con éxito.")
             else:
